@@ -4,41 +4,67 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+import sys
 
-# Importing the dataset
-dataset = pd.read_csv('Salary_Data.csv')
-X = dataset.iloc[:, :-1].values
-y = dataset.iloc[:, 1].values
+# Creating regression class
 
-# Splitting the dataset into the Training set and Test set
-from sklearn.model_selection import train_test_split
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 1/3, random_state = 0)
+class Linear_regression:
+	
+	def __init__(self,train_data,train_labels):
+		self.train_data = train_data
+		self.train_labels = train_labels
+		self.new_train_data = np.insert(self.train_data,0,1,axis=1)		
+		self.weights = np.zeros((2,1))		
+		self.epochs = 1500
+		self.alpha = 0.01
 
-# Feature Scaling
-"""from sklearn.preprocessing import StandardScaler
-sc_X = StandardScaler()
-X_train = sc_X.fit_transform(X_train)
-X_test = sc_X.transform(X_test)
-sc_y = StandardScaler()
-y_train = sc_y.fit_transform(y_train)"""
+	def hypothesis(self):
+		return np.dot(self.new_train_data,self.weights)	
+		
+	def cost(self):
+		cost = (1/(2*np.size(self.train_labels)))*np.sum((self.hypothesis()-self.train_labels)**2)
+		return cost		
 
-# Fitting Simple Linear Regression to the Training set
-from sklearn.linear_model import LinearRegression
-regressor = LinearRegression()
-regressor.fit(X_train, y_train)
+	def derivative(self):
+		return (1/np.size(self.train_labels))*np.dot(self.new_train_data.T,(self.hypothesis()-self.train_labels))
 
-# Predicting the Test set results
-y_pred = regressor.predict(X_test)
+	def train(self):
+		self.loss = []		
+		for i in range(self.epochs):
+			cost = self.cost()					
+			self.weights = self.weights - (self.alpha) * self.derivative()
+			self.loss.append(cost)
+		
+		plt.plot(self.loss)
+		plt.show()	
+		return self.weights,np.array(self.loss)
+		
+	def predict(self,data):
+		return np.dot(data,self.weights)	
 
-# Visualising the Training set results
-plt.scatter(X_train, y_train, color = 'red')
-plt.plot(X_train, regressor.predict(X_train), color = 'blue')
+	def visualize(self,data):
+		data = self.hypothesis()
+    plt.title('Salary vs Experience')
+		plt.xlabel('Years of Experience')
+		plt.ylabel('Salary')		
+		plt.scatter(self.train_data,self.train_labels,marker='x',color='red',label='Training data')
+		plt.plot(self.new_train_data[:,1],data,label='Linear regression')
+		plt.legend(loc='lower right')
+		plt.show()						
 
+if __name__ == '__main__':
+  
+  # Reading data   
+  
+	data = pd.read_csv('Salary_Data.csv')
+	train_data = np.array(data.iloc[:,:1])
+	train_labels = np.array(data.iloc[:,1:])			
 
-# Visualising the Test set results
-plt.scatter(X_test, y_test, color = 'red')
-plt.plot(X_train, regressor.predict(X_train), color = 'blue')
-plt.title('Salary vs Experience (Test set)')
-plt.xlabel('Years of Experience')
-plt.ylabel('Salary')
-plt.show()
+#   Applying Linear regression  
+  
+	linear = Linear_regression(train_data,train_labels)	
+	print('older cost: ',gd.cost())
+	result = gd.train()
+	print('updated theta: \n',result[0])
+	print('final cost: ',gd.cost())
+	gd.visualize(gd.hypothesis())	
